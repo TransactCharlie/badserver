@@ -50,7 +50,7 @@ class BadServer:
             response.write('<html><title>Endless Body</title><body>\n')
             while True:
                 await asyncio.sleep(1)
-                response.write('<p><a href="/index.html>index</a></p>\n')
+                response.write('<p><a href="/index.html">index</a></p>\n')
         return response.stream(endless, content_type='text/html')
 
     def generate_https_only_index(self):
@@ -71,10 +71,12 @@ class BadServer:
         <html>
             <title>Bad Server Index</title>
             <body>
-                <p><a href="/index.html">Circle Reference</a></p>"""
+                <p><a href="/index.html">Circle Reference</a></p>
+        """
         for i in range(0, 10):
             index_html += """
-                <p><a href="/endlessBody">endless %s</a></p>""" % i
+                <p><a href="/endlessBody">endless %s</a></p>
+                """ % i
 
         index_html += """
                 <p><a href="/slowpage">Slow Page</a></p>
@@ -84,7 +86,7 @@ class BadServer:
                 <p><a href="http://localhost:{http_port}/page1">Page1</a></p>
                 <p><a href="/doesntexist.html">Doesn't exist link</a></p>
                 <p><a href="/nonhtml.txt">Text Page</a></p>
-                <p><a href="http://www.monzo.com/">Monzo.com</a></p>
+                <p><a href="https://someexternallink.com/">External Domain link</a></p>
             </body>
         </html>""".format(https_port=self.https_port, http_port=self.http_port)
 
@@ -103,7 +105,14 @@ class BadServer:
 
     @app_http.route("/bigcookie")
     async def big_cookie(self):
-        r = response.text("HUGE COOKIE")
+        bigcookie_html = """
+            <html>
+                <title>BigCookie!</title>
+                <body>
+                    <p><a href="/index.html">Index</a></p>
+                </body>
+            </html>"""
+        r = response.html(bigcookie_html)
         # cookies should be less than 4093 bytes in size.
         # should not have more than 50 cookies per domain
         # visiting this in say... chrome will give you:
@@ -127,7 +136,7 @@ class BadServer:
     async def page3(self):
         return response.html('<html><body><p><a href="/page1">page1</a></p>')
 
-    # A page that has a link in it bus isn't html
+    # A page that has a link in it but isn't html
     @app_http.route("/nonhtml.txt")
     async def non_html(self):
         return response.text('An example of an http link would be <a href="/index.html">index</a>')
