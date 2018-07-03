@@ -1,5 +1,6 @@
 from sanic import Sanic
 from sanic import response
+from sanic.response import stream
 import asyncio
 from multiprocessing import Process
 import click
@@ -24,7 +25,7 @@ class BadServer:
         self.generate_https_only_index()
 
     def run(self):
-        http_args = {"port": self.http_port, "host": self.host}
+        http_args = {"port": self.http_port, "host": self.host, "workers": 4}
         self.http_process = Process(target=self.app_http.run, kwargs=http_args)
         self.http_process.start()
 
@@ -75,8 +76,8 @@ class BadServer:
         """
         for i in range(0, 10):
             index_html += """
-                <p><a href="/endlessBody">endless %s</a></p>
-                """ % i
+                <p><a href="/endlessBody">endless {}</a></p>
+                """.format(i)
 
         index_html += """
                 <p><a href="/slowpage">Slow Page</a></p>
@@ -87,6 +88,7 @@ class BadServer:
                 <p><a href="/doesntexist.html">Doesn't exist link</a></p>
                 <p><a href="/nonhtml.txt">Text Page</a></p>
                 <p><a href="https://someexternallink.com/">External Domain link</a></p>
+                <p><a href="/one_million_links"</a>ONE MILLION DOLLAR..... Links!</p>
             </body>
         </html>""".format(https_port=self.https_port, http_port=self.http_port)
 
@@ -141,6 +143,21 @@ class BadServer:
     async def non_html(self):
         return response.text('An example of an http link would be <a href="/index.html">index</a>')
 
+    @app_http.route("/random/<hash:[0-9]+>")
+    async def random_hash(self, hash):
+        """Accepts anything"""
+        return response.html('<html><body><p>Random page</p></body></html>')
+
+    @app_http.route("/one_million_links")
+    async def one_million(self):
+
+        async def stream_hashes(response):
+            response.write('<html><body>')
+            for i in range(1000000):
+                response.write('<p><a href="/random/{}">{}</a>'.format(i, i))
+            response.write('</body></html>')
+
+        return stream(stream_hashes, content_type='text/html')
 
 @click.command()
 @click.option('--http-port', default=8000, help='port to run http server on (8000)')
