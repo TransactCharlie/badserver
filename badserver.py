@@ -88,7 +88,6 @@ class BadServer:
                 <p><a href="/doesntexist.html">Doesn't exist link</a></p>
                 <p><a href="/nonhtml.txt">Text Page</a></p>
                 <p><a href="https://someexternallink.com/">External Domain link</a></p>
-                <p><a href="/one_million_links"</a>ONE MILLION DOLLAR..... Links!</p>
             </body>
         </html>""".format(https_port=self.https_port, http_port=self.http_port)
 
@@ -150,6 +149,10 @@ class BadServer:
 
     @app_http.route("/one_million_links")
     async def one_million(self):
+        """
+        One Million links is.... a lot of links. Hit this directly if you want to test your scraper
+        Can handle a lot of requests. This will also stress the badserver quite hard too !
+        """
 
         async def stream_hashes(response):
             response.write('<html><body>')
