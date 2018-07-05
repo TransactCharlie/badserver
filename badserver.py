@@ -162,6 +162,7 @@ class BadServer:
 
         return stream(stream_hashes, content_type='text/html')
 
+
 @click.command()
 @click.option('--http-port', default=8000, help='port to run http server on (8000)')
 @click.option('--https-port', default=8001, help='port to run https server on (8001)')
