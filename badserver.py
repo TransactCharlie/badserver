@@ -25,7 +25,7 @@ class BadServer:
         self.generate_https_only_index()
 
     def run(self):
-        http_args = {"port": self.http_port, "host": self.host, "workers": 4}
+        http_args = {"port": self.http_port, "host": self.host, "workers": 4, "backlog": 1000000, "access_log": False}
         self.http_process = Process(target=self.app_http.run, kwargs=http_args)
         self.http_process.start()
 
@@ -37,21 +37,21 @@ class BadServer:
     @app_http.route("/slowpage")
     async def slow_page(self):
         async def slow_response(response):
-            response.write('<html><title>Slow Page</title><body><p>Slow Responses Start....</p>')
+            await response.write('<html><title>Slow Page</title><body><p>Slow Responses Start....</p>')
             for i in range(20):
                 await asyncio.sleep(1)
-                response.write('<p>SLOW</p>')
-            response.write('<p><a href="/index.html">index</a></p></body></html>')
+                await response.write('<p>SLOW</p>')
+            await response.write('<p><a href="/index.html">index</a></p></body></html>')
         return response.stream(slow_response, content_type='text/html')
 
     # This will timeout when the server hits its threshold.
     @app_http.route("/endlessBody")
     async def endless(self):
         async def endless(response):
-            response.write('<html><title>Endless Body</title><body>\n')
+            await response.write('<html><title>Endless Body</title><body>\n')
             while True:
                 await asyncio.sleep(1)
-                response.write('<p><a href="/index.html">index</a></p>\n')
+                await response.write('<p><a href="/index.html">index</a></p>\n')
         return response.stream(endless, content_type='text/html')
 
     def generate_https_only_index(self):
@@ -155,10 +155,10 @@ class BadServer:
         """
 
         async def stream_hashes(response):
-            response.write('<html><body>')
+            await response.write('<html><body>')
             for i in range(1000000):
-                response.write('<p><a href="/random/{}">{}</a>'.format(i, i))
-            response.write('</body></html>')
+                await response.write('<p><a href="/random/{}">{}</a>'.format(i, i))
+            await response.write('</body></html>')
 
         return stream(stream_hashes, content_type='text/html')
 
